@@ -13,7 +13,7 @@ test:
 uberjar:
 	clj -T:build uber
 
-docker-build: uberjar
+docker-build:
 	docker build -t drawio-parser .
 
 # Runs the container, tests endpoints with httpie, and then stops the container.
