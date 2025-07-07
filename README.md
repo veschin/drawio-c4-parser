@@ -1,123 +1,121 @@
-# Draw.io C4 Diagram Parser
+# Draw.io C4 Diagram Parser Microservice
 
-Этот проект представляет собой парсер на Clojure для извлечения данных из C4-диаграмм, созданных в Draw.io (app.diagrams.net). Он анализирует XML-файлы, экспортированные из Draw.io, и преобразует их в структурированные данные в формате Clojure.
+Этот проект представляет собой микросервис на Clojure для извлечения данных из C4-диаграмм, созданных в Draw.io (app.diagrams.net). Он предоставляет REST API для анализа XML-файлов и возвращает структурированные данные в формате JSON.
 
-Парсер извлекает как явную информацию (элементы, связи), так и неявные иерархические связи, основанные на визуальном расположении элементов (вложенности).
+Сервис извлекает как явную информацию (элементы, связи), так и неявные иерархические связи, основанные на визуальном расположении элементов (вложенности).
 
-## Ожидаемые входные данные
+## Функциональность
 
-Парсер ожидает на вход XML-файл, соответствующий формату экспорта Draw.io. Ключевая информация должна храниться в тегах `<object>`, которые содержат специальные C4-атрибуты (`c4Name`, `c4Type` и т.д.).
+-   **REST API**: Предоставляет эндпоинт `POST /parse/diagram` для обработки XML-данных.
+-   **Два формата**: Поддерживает как стандартный XML-экспорт, так и URL-encoded "paste" данные из Draw.io.
+-   **Анализ геометрии**: Определяет вложенность элементов (например, контейнеры внутри системных границ) на основе их координат.
+-   **Готовность к развертыванию**: Включает `Dockerfile` для легкой контейнеризации и развертывания.
 
-### Пример входных данных (фрагмент XML)
+## Использование
 
-```xml
-<root>
-  <!-- Boundary Element -->
-  <object c4Name="My System" c4Type="SystemScopeBoundary" id="boundary-1">
-    <mxCell vertex="1" parent="1">
-      <mxGeometry x="100" y="100" width="400" height="300" as="geometry" />
-    </mxCell>
-  </object>
+### Запуск через Docker (Рекомендуемый способ)
 
-  <!-- Contained Element -->
-  <object c4Name="API" c4Type="Container" c4Technology="Clojure" id="container-5">
-    <mxCell vertex="1" parent="1">
-      <mxGeometry x="150" y="150" width="150" height="100" as="geometry" />
-    </mxCell>
-  </object>
+1.  **Сборка Docker-образа:**
+    ```sh
+    make docker-build
+    ```
 
-  <!-- Relationship -->
-  <object c4Type="Relationship" id="rel-10">
-    <mxCell edge="1" source="user-id" target="container-5" parent="1"/>
-  </object>
-  <mxCell id="rel-label-11" value="[JSON/HTTPS]" parent="rel-10"/>
-</root>
+2.  **Запуск контейнера:**
+    ```sh
+    make docker-run
+    ```
+    Сервис будет доступен по адресу `http://localhost:8080`.
+
+### Локальный запуск для разработки
+
+1.  **Запуск тестов:**
+    Тесты запускаются с помощью [Kaocha](https://github.com/lambdaisland/kaocha).
+    ```sh
+    make test
+    ```
+
+2.  **Запуск веб-сервера:**
+    ```sh
+    make run
+    ```
+    Сервер запустится на порту 8080.
+
+### Сборка Uberjar
+
+Для сборки standalone jar-файла выполните:
+```sh
+make uberjar
 ```
+Результат будет сохранен в `target/space.veschin.drawio-parser-0.1.0-standalone.jar`.
 
-## Структура выходных данных
+## REST API
 
-Парсер возвращает Clojure-мапу, содержащую два ключа: `:elements` и `:relationships`. После обогащения данных некоторые элементы в списке `:elements` также могут содержать ключ `:parent-id`.
+### `POST /parse/diagram`
 
-### Пример выходных данных (Clojure Hash Map)
+Этот эндпоинт принимает XML-данные диаграммы в теле запроса и возвращает JSON-представление C4-модели.
 
-```clojure
-{:elements
- [{:id "boundary-1",
-   :name "My System",
-   :type "SystemScopeBoundary",
-   :description nil,
-   :technology nil,
-   :application nil,
-   :label nil,
-   :geometry {:x 100, :y 100, :width 400, :height 300}}
-  {:id "container-5",
-   :name "API",
-   :type "Container",
-   :description nil,
-   :technology "Clojure",
-   :application nil,
-   :label nil,
-   :geometry {:x 150, :y 150, :width 150, :height 100},
-   :parent-id "boundary-1"}] ; <-- Неявная связь
+-   **URL**: `/parse/diagram`
+-   **Метод**: `POST`
+-   **Headers**:
+    -   `Content-Type`: `application/xml` (для стандартного экспорта) или `text/plain` (для "paste" данных).
+-   **Query Params (опционально)**:
+    -   `type=paste`: Укажите этот параметр, если вы отправляете URL-encoded "paste" данные.
 
- :relationships
- [{:id "rel-10",
-   :source "user-id",
-   :target "container-5",
-   :description nil,
-   :label nil,
-   :technology "[JSON/HTTPS]"}]}
+#### Пример использования (cURL)
+
+-   **Отправка стандартного XML-файла:**
+    ```sh
+    curl -X POST --header "Content-Type: application/xml" \
+         --data-binary "@resources/drawio.drawio.xml" \
+         http://localhost:8080/parse/diagram
+    ```
+
+-   **Отправка "paste" данных:**
+    ```sh
+    curl -X POST --header "Content-Type: text/plain" \
+         --data-binary "@resources/drawio-paste.xml" \
+         "http://localhost:8080/parse/diagram?type=paste"
+    ```
+
+## Структура выходных данных (JSON)
+
+Сервис возвращает JSON-объект, содержащий два ключа: `elements` и `relationships`.
+
+```json
+{
+  "elements": [
+    {
+      "id": "container-5",
+      "name": "API",
+      "type": "Container",
+      "description": null,
+      "technology": "Clojure",
+      "application": null,
+      "label": "...",
+      "geometry": { "x": 150, "y": 150, "width": 150, "height": 100 },
+      "parent-id": "boundary-1"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel-10",
+      "source": "user-id",
+      "target": "container-5",
+      "description": null,
+      "label": "...",
+      "technology": "[JSON/HTTPS]"
+    }
+  ]
+}
 ```
-
-## Сопоставление данных
-
-### Элементы
-
-| Ключ в Clojure | Откуда извлекается в XML                                                   |
-|:---------------|:---------------------------------------------------------------------------|
-| `:id`          | Атрибут `id` тега `<object>`                                               |
-| `:name`        | Атрибут `c4Name` тега `<object>`                                           |
-| `:type`        | Атрибут `c4Type` тега `<object>`                                           |
-| `:description` | Атрибут `c4Description` тега `<object>`                                    |
-| `:technology`  | Атрибут `c4Technology` тега `<object>`                                     |
-| `:application` | Атрибут `c4Application` тега `<object>`                                    |
-| `:label`       | Атрибут `label` тега `<object>`                                            |
-| `:geometry`    | Атрибуты `x`, `y`, `width`, `height` дочернего тега `<mxGeometry>`         |
-| `:parent-id`   | **(Неявный)** `id` родительского элемента, вычисляется на основе геометрии |
-
-### Связи
-
-| Ключ в Clojure | Откуда извлекается в XML                                                       |
-|:---------------|:-------------------------------------------------------------------------------|
-| `:id`          | Атрибут `id` тега `<object>` с `c4Type="Relationship"`                         |
-| `:source`      | Атрибут `source` дочернего тега `<mxCell>`                                     |
-| `:target`      | Атрибут `target` дочернего тега `<mxCell>`                                     |
-| `:description` | Атрибут `c4Description` тега `<object>`                                        |
-| `:label`       | Атрибут `label` тега `<object>`                                                |
-| `:technology`  | Атрибут `value` связанного тега `<mxCell>` (который является меткой для ребра) |
 
 ## Критерии выявления неявных связей (вложенности)
 
 Неявная связь (принадлежность) определяется, когда один элемент визуально находится внутри другого. Для этого должны быть выполнены следующие условия:
 
 1.  **Тип родителя**: Родительский элемент должен быть элементом-границей, то есть иметь тип (`c4Type`) `SystemScopeBoundary` или `ContainerScopeBoundary`.
-2.  **Геометрическое вложение**: Прямоугольник, описывающий геометрию дочернего элемента (его `bounding box`), должен быть **полностью** содержаться внутри прямоугольника родительского элемента.
+2.  **Геометрическое вложение**: Прямоугольник, описывающий геометрию дочернего элемента, должен быть **полностью** содержаться внутри прямоугольника родительского элемента.
 
-Если оба условия выполнены, дочернему элементу добавляется ключ `:parent-id` со значением `id` родительского элемента.
+Если оба условия выполнены, дочернему элементу добавляется ключ `parent-id` со значением `id` родительского элемента.
 
-## Использование
-
-### Запуск тестов
-
-Для проверки корректности работы парсера выполните:
-```sh
-make test
 ```
-
-### Запуск приложения
-
-Для запуска парсера и вывода результата в консоль выполните:
-```sh
-make run
-```
-Приложение обработает файл `resources/drawio.drawio.xml` и выведет распарсенные и обогащенные данные.
