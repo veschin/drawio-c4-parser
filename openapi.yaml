@@ -1,0 +1,117 @@
+openapi: 3.0.3
+info:
+  title: Draw.io C4 Parser API
+  description: |-
+    An API for parsing C4 model diagrams from Draw.io XML files.
+    It extracts elements, relationships, and implicit containment hierarchies.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:{port}/api/v1
+    variables:
+      port:
+        default: '8080'
+        description: Port for the server
+
+paths:
+  /parse/export:
+    post:
+      summary: Parse a standard Draw.io XML file
+      description: Accepts a standard XML file exported from Draw.io and returns its C4 model representation.
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              type: string
+              format: binary
+              description: The raw XML content from a Draw.io export.
+      responses:
+        '200':
+          description: Successful parsing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /parse/paste:
+    post:
+      summary: Parse URL-encoded "paste" data
+      description: Accepts a URL-encoded string from Draw.io's "paste" functionality.
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              description: The URL-encoded string.
+      responses:
+        '200':
+          description: Successful parsing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Diagram'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Diagram:
+      type: object
+      properties:
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Element'
+        relationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relationship'
+
+    Element:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string, nullable: true }
+        type: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        technology: { type: string, nullable: true }
+        application: { type: string, nullable: true }
+        label: { type: string, nullable: true }
+        geometry: { $ref: '#/components/schemas/Geometry', nullable: true }
+        parent-id: { type: string, nullable: true, description: "ID of the containing boundary element." }
+
+    Relationship:
+      type: object
+      properties:
+        id: { type: string }
+        source: { type: string }
+        target: { type: string }
+        description: { type: string, nullable: true }
+        label: { type: string, nullable: true }
+        technology: { type: string, nullable: true }
+
+    Geometry:
+      type: object
+      properties:
+        x: { type: integer }
+        y: { type: integer }
+        width: { type: integer }
+        height: { type: integer }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }

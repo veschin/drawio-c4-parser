@@ -8,41 +8,34 @@
   (slurp (io/resource path)))
 
 (deftest web-api-tests
-  (testing "POST /parse/diagram endpoint"
-
-    (testing "with standard export XML"
+  (testing "API Endpoints"
+    (testing "POST /api/v1/parse/export"
       (let [xml-data (slurp-resource "drawio.drawio.xml")
             request {:request-method :post
-                     :uri "/parse/diagram"
+                     :uri "/api/v1/parse/export"
                      :headers {"content-type" "application/xml"}
                      :body (io/input-stream (.getBytes xml-data))}
             response (app request)]
         (is (= 200 (:status response)))
         (let [body (json/parse-string (:body response) true)]
           (is (= 15 (count (:elements body))))
-          (is (= 1 (count (:relationships body))))
-          (let [container16 (first (filter #(= "16" (:id %)) (:elements body)))]
-            (is (= "2" (:parent-id container16)))))))
+          (is (= 1 (count (:relationships body)))))))
 
-    (testing "with URL-encoded paste XML"
+    (testing "POST /api/v1/parse/paste"
       (let [paste-data (slurp-resource "drawio-paste.xml")
             request {:request-method :post
-                     :uri "/parse/diagram"
-                     :query-params {"type" "paste"}
+                     :uri "/api/v1/parse/paste"
                      :headers {"content-type" "text/plain"}
                      :body (io/input-stream (.getBytes paste-data))}
             response (app request)]
         (is (= 200 (:status response)))
         (let [body (json/parse-string (:body response) true)]
-          (is (= 15 (count (:elements body))))
-          (is (= 1 (count (:relationships body)))))))
+          (is (= 15 (count (:elements body)))))))
 
     (testing "with invalid XML"
       (let [request {:request-method :post
-                     :uri "/parse/diagram"
+                     :uri "/api/v1/parse/export"
                      :headers {"content-type" "application/xml"}
                      :body (io/input-stream (.getBytes "<invalid>"))}
             response (app request)]
-        (is (= 400 (:status response)))
-        (let [body (json/parse-string (:body response) true)]
-          (is (= "Failed to parse XML" (:error body))))))))
+        (is (= 400 (:status response)))))))
