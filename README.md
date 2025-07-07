@@ -1,115 +1,113 @@
-# Draw.io C4 Diagram Parser Microservice
+# Draw.io C4 Parser Microservice
 
-Этот проект представляет собой микросервис на Clojure для извлечения данных из C4-диаграмм, созданных в Draw.io (app.diagrams.net). Он предоставляет REST API для анализа XML-файлов и возвращает структурированные данные в формате JSON.
-
-Сервис извлекает как явную информацию (элементы, связи), так и неявные иерархические связи, основанные на визуальном расположении элементов (вложенности).
+A Clojure microservice that parses C4 model diagrams from Draw.io XML files. It provides a REST API to extract elements, relationships, and implicit containment hierarchies, turning visual diagrams into structured JSON data.
 
 ## Table of Contents
 
-- [Технологический стек](#технологический-стек)
-- [Функциональность](#функциональность)
-- [Конфигурация](#конфигурация)
-- [Использование](#использование)
-  - [Запуск через Docker (Рекомендуемый способ)](#запуск-через-docker-рекомендуемый-способ)
-  - [Локальный запуск для разработки](#локальный-запуск-для-разработки)
-- [REST API](#rest-api)
-  - [POST /api/v1/parse/export](#post-apiv1parseexport)
-  - [POST /api/v1/parse/paste](#post-apiv1parsepaste)
-- [Структура выходных данных (JSON)](#структура-выходных-данных-json)
-- [Критерии выявления неявных связей](#критерии-выявления-неявных-связей)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Local Installation](#local-installation)
+  - [Docker (Recommended)](#docker-recommended)
+- [Configuration](#configuration)
+- [API Reference](#api-reference)
+- [Data Structure](#data-structure)
+- [Data Mapping Example](#data-mapping-example)
+- [Implicit Relationship Detection](#implicit-relationship-detection)
 
-## Технологический стек
+## Features
 
--   **Язык**: Clojure
--   **Веб-сервер**: http-kit
--   **Роутинг**: reitit
--   **Сборка**: clojure.tools.build
--   **Тестирование**: kaocha
--   **Контейнеризация**: Docker
+-   **REST API**: Endpoints for both standard Draw.io XML and URL-encoded "paste" data.
+-   **Diagram Parsing**: Extracts C4 elements, relationships, and their properties.
+-   **Hierarchy Detection**: Infers parent-child relationships from element geometry.
+-   **Containerized**: Includes a multi-stage `Dockerfile` for easy deployment.
 
-## Функциональность
+## Tech Stack
 
--   **REST API**: Предоставляет два эндпоинта для обработки разных форматов данных из Draw.io.
--   **Анализ геометрии**: Определяет вложенность элементов на основе их координат.
--   **Готовность к развертыванию**: Включает `Dockerfile` для легкой контейнеризации.
+-   **Language**: Clojure
+-   **Web Server**: http-kit
+-   **Routing**: reitit
+-   **Build Tool**: clojure.tools.build
+-   **Test Runner**: kaocha
+-   **Containerization**: Docker
 
-## Конфигурация
+## Getting Started
 
-Сервис настраивается с помощью переменных о��ружения.
+### Prerequisites
+- [Clojure CLI](https://clojure.org/guides/install_clojure)
+- [Docker](https://docs.docker.com/get-docker/)
+- `make`
+- [httpie](https://httpie.io/docs/cli/installation)
 
--   `DP_PORT`: Порт, на котором будет запущен веб-сервер.
-    -   Для удобства локальной разработки можно создать файл `.env` в корне проекта:
+### Local Installation
+
+1.  **Run tests:**
+    ```sh
+    make test
+    ```
+
+2.  **Build the standalone JAR:**
+    ```sh
+    make uberjar
+    ```
+    The output will be located at `target/drawio_parser.jar`.
+
+3.  **Run the server locally:**
+    ```sh
+    make run
+    ```
+    The server will start on the port defined by `DP_PORT` (defaults to 8080).
+
+### Docker (Recommended)
+
+1.  **Build the Docker image:**
+    ```sh
+    make docker-build
+    ```
+
+2.  **Run the container and test the API:**
+    ```sh
+    make docker-run
+    ```
+    This command will start the container, run `httpie` requests to verify the endpoints, print the API responses, and then stop and remove the container.
+
+## Configuration
+
+The service is configured via environment variables.
+
+-   `DP_PORT`: The port on which the web server will run.
+    -   For local development, you can create an `.env` file in the project root:
         ```
         # .env
         DP_PORT=8080
         ```
 
-## Использование
+## API Reference
 
-### Запуск через Docker (Рекомендуемый способ)
-
-1.  **Сборка Docker-образа:**
-    ```sh
-    make docker-build
-    ```
-
-2.  **Запуск контейнера:**
-    ```sh
-    make docker-run
-    ```
-    Эта команда запустит контейнер, используя `DP_PORT` из вашего `.env` файла, проверит работоспособность API с помощью `curl` и остановит контейнер.
-
-### Локальный запуск для разработки
-
-1.  **Запуск тестов:**
-    Тесты запускаются с помощью [Kaocha](https://github.com/lambdaisland/kaocha).
-    ```sh
-    make test
-    ```
-
-2.  **Запуск веб-сервера:**
-    ```sh
-    make run
-    ```
-    Сервер запустится на порту, указанном в `DP_PORT` (по умолчанию 8080).
-
-## REST API
-
-Полная спецификация API доступна в файле `openapi.yaml`.
+A full OpenAPI 3 specification is available in `openapi.yaml`.
 
 ### POST /api/v1/parse/export
 
-Принимает стандартный XML-файл, экспортированный из Draw.io.
+Accepts a standard XML file exported from Draw.io.
 
--   **URL**: `/api/v1/parse/export`
--   **Метод**: `POST`
--   **Headers**: `Content-Type: application/xml`
--   **Тело запроса**: Содержимое `.drawio` или `.xml` файла.
--   **Пример (cURL)**:
+-   **Example Request (httpie):**
     ```sh
-    curl -X POST --header "Content-Type: application/xml" \
-         --data-binary "@resources/drawio.drawio.xml" \
-         http://localhost:8080/api/v1/parse/export
+    http POST :8080/api/v1/parse/export < resources/drawio.drawio.xml
     ```
 
 ### POST /api/v1/parse/paste
 
-Принимает URL-encoded строку, скопированную из Draw.io через опцию "Extras -> Copy as Text".
+Accepts a URL-encoded string copied from Draw.io ("Extras -> Copy as Text").
 
--   **URL**: `/api/v1/parse/paste`
--   **Метод**: `POST`
--   **Headers**: `Content-Type: text/plain`
--   **Тело запроса**: URL-encoded строка.
--   **Пример (cURL)**:
+-   **Example Request (httpie):**
     ```sh
-    curl -X POST --header "Content-Type: text/plain" \
-         --data-binary "@resources/drawio-paste.xml" \
-         http://localhost:8080/api/v1/parse/paste
+    http POST :8080/api/v1/parse/paste Content-Type:text/plain < resources/drawio-paste.xml
     ```
 
-## Структура выходных данных (JSON)
+## Data Structure
 
-Сервис возвращает JSON-объект, содержащий два ключа: `elements` и `relationships`.
+The API returns a JSON object containing `elements` and `relationships`.
 
 ```json
 {
@@ -118,7 +116,6 @@
       "id": "container-5",
       "name": "API",
       "type": "Container",
-      "description": null,
       "technology": "Clojure",
       "parent-id": "boundary-1"
     }
@@ -134,8 +131,61 @@
 }
 ```
 
-## Критерии выявления неявных связей
+## Data Mapping Example
 
-Неявная связь (принадлежность) определяется, когда один элемент визуально находится внутри другого. Для этого прямоугольник дочернего элемента должен быть **полностью** содержаться внутри прямоугольника родительского элемента, который должен иметь тип `SystemScopeBoundary` или `ContainerScopeBoundary`.
+This section shows how data is transformed from the source XML to the final JSON output.
 
+### 1. Source Draw.io XML
+
+Example diagram 
+
+![diagram](./resources/diagram.jpg)
+
+
+This is a simplified snippet from a `.drawio` file, representing a single C4 container.
+
+```xml
+<object c4Name="API" c4Type="Container" c4Technology="Clojure" id="container-5">
+  <mxCell vertex="1" parent="1">
+    <mxGeometry x="150" y="150" width="150" height="100" as="geometry" />
+  </mxCell>
+</object>
 ```
+
+### 2. Internal Clojure Representation
+
+The parser converts the XML into a Clojure hash map. Note that geometry values are parsed into integers for easier processing.
+
+```clojure
+{:id "container-5",
+ :name "API",
+ :type "Container",
+ :description nil,
+ :technology "Clojure",
+ :application nil,
+ :label nil,
+ :geometry {:x 150, :y 150, :width 150, :height 100}}
+```
+
+### 3. Final JSON API Output
+
+The web handler serializes the Clojure map into a JSON object. Keys are converted to `camelCase` strings, and `nil` values are omitted.
+
+```json
+{
+    "id": "container-5",
+    "name": "API",
+    "type": "Container",
+    "technology": "Clojure",
+    "geometry": {
+        "x": 150,
+        "y": 150,
+        "width": 150,
+        "height": 150
+    }
+}
+```
+
+## Implicit Relationship Detection
+
+A parent-child relationship is inferred if an element's bounding box is completely contained within the bounding box of a `SystemScopeBoundary` or `ContainerScopeBoundary` element. If detected, the child element will have a `parent-id` attribute.
