@@ -1,7 +1,5 @@
 # Draw.io C4 Parser Microservice
 
-A Clojure microservice that parses C4 model diagrams from Draw.io XML files. It provides a REST API to extract elements, relationships, and implicit containment hierarchies, turning visual diagrams into structured JSON data.
-
 ## Table of Contents
 
 - [Features](#features)
@@ -71,6 +69,18 @@ A Clojure microservice that parses C4 model diagrams from Draw.io XML files. It 
     make docker-run
     ```
     This command will start the container, run `httpie` requests to verify the endpoints, print the API responses, and then stop and remove the container.
+
+
+3.  **Prod mode run the container:**
+    This command runs the container in the background, maps port 8090 on your host to port 8080 in the container, and sets the application port using the `DP_PORT` environment variable.
+
+    ```sh
+    docker run -d \
+        -p 8090:8080 \
+        -e DP_PORT=8080 \
+        --name drawio-parser-app \
+        drawio-parser
+    ```
 
 ## Configuration
 
