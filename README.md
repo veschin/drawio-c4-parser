@@ -86,12 +86,15 @@
 
 The service is configured via environment variables.
 
--   `DP_PORT`: The port on which the web server will run.
-    -   For local development, you can create an `.env` file in the project root:
-        ```
-        # .env
-        DP_PORT=8080
-        ```
+| Variable  | Description                         | Default |
+| :-------- | :---------------------------------- | :------ |
+| `DP_PORT` | The port for the web server to use. | `8080`  |
+
+For local development, you can create an `.env` file in the project root:
+```
+# .env
+DP_PORT=8080
+```
 
 ## API Reference
 
