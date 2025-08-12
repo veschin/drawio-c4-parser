@@ -1,0 +1,18 @@
+{:source-paths ["src"]
+ 
+ :dependencies [[reagent/reagent "1.2.0"]
+                [bidi/bidi "2.1.6"]
+                [cljs-ajax/cljs-ajax "0.8.4"]]
+                
+ :builds {:app {:target :browser
+                :output-dir "resources/public/js"
+                :asset-path "/js"
+                :modules {:main {:entries [drawio-ui.core]
+                                :init-fn drawio-ui.core/init}}
+                :compiler-options {:infer-externs :auto}
+                :devtools {:http-root "resources/public"
+                          :http-port 3000}}}}
+                          
+ :dev-http {3000 ["resources/public"]}
+ 
+ :nrepl {:port 3333}}

@@ -1,0 +1,17 @@
+{
+  "name": "drawio-parser-ui",
+  "version": "1.0.0",
+  "description": "Draw.io C4 Diagram Comparison Web UI",
+  "scripts": {
+    "dev": "shadow-cljs watch app",
+    "build": "shadow-cljs release app",
+    "repl": "shadow-cljs cljs-repl app"
+  },
+  "devDependencies": {
+    "shadow-cljs": "^2.25.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
