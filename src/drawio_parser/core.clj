@@ -17,38 +17,38 @@
 
 (defn- parse-geometry [element-xml]
   (when-let [geometry-node (first (find-nodes element-xml #(= :mxGeometry (:tag %))))]
-    (let [attrs (:attrs geometry-node)]
+    (let [{:keys [x y width height]} (:attrs geometry-node)]
       ;; Convert geometry values to numbers for easier calculations
       (try
-        {:x (Integer/parseInt (:x attrs))
-         :y (Integer/parseInt (:y attrs))
-         :width (Integer/parseInt (:width attrs))
-         :height (Integer/parseInt (:height attrs))}
+        {:x (Integer/parseInt x)
+         :y (Integer/parseInt y)
+         :width (Integer/parseInt width)
+         :height (Integer/parseInt height)}
         (catch Exception _ nil)))))
 
 (defn- parse-element [element-xml]
-  (let [attrs (:attrs element-xml)]
-    {:id          (:id attrs)
-     :name        (:c4Name attrs)
-     :type        (:c4Type attrs)
-     :description (:c4Description attrs)
-     :technology  (:c4Technology attrs)
-     :application (:c4Application attrs)
-     :label       (:label attrs)
+  (let [{:keys [id c4Name c4Type c4Description c4Technology c4Application label]} 
+        (:attrs element-xml)]
+    {:id          id
+     :name        c4Name
+     :type        c4Type
+     :description c4Description
+     :technology  c4Technology
+     :application c4Application
+     :label       label
      :geometry    (parse-geometry element-xml)}))
 
 (defn- parse-relationship [rel-object-xml edge-labels]
-  (let [rel-attrs (:attrs rel-object-xml)
-        rel-id    (:id rel-attrs)
+  (let [{:keys [id c4Description label]} (:attrs rel-object-xml)
         edge-cell (first (filter (complement string?) (:content rel-object-xml)))
-        edge-attrs (:attrs edge-cell)]
-    (when (and edge-attrs (:source edge-attrs) (:target edge-attrs))
-      {:id          rel-id
-       :source      (:source edge-attrs)
-       :target      (:target edge-attrs)
-       :description (:c4Description rel-attrs)
-       :label       (:label rel-attrs)
-       :technology  (:value (edge-labels rel-id))})))
+        {:keys [source target]} (:attrs edge-cell)]
+    (when (and source target)
+      {:id          id
+       :source      source
+       :target      target
+       :description c4Description
+       :label       label
+       :technology  (:value (edge-labels id))})))
 
 (defn parse-diagram [xml-stream]
   (let [parsed-xml (xml/parse xml-stream {:skip-whitespace true})
@@ -61,39 +61,43 @@
                          (reduce (fn [acc {:keys [parent value]}]
                                    (assoc acc parent {:value value}))
                                  {}))
-        c4-elements (remove #(= "Relationship" (:c4Type (:attrs %))) all-objects)
-        c4-relationships (filter #(= "Relationship" (:c4Type (:attrs %))) all-objects)]
+        {c4-relationships true c4-elements false}
+        (group-by #(= "Relationship" (:c4Type (:attrs %))) all-objects)]
     {:elements      (map parse-element c4-elements)
-     :relationships (->> (map #(parse-relationship % edge-labels) c4-relationships)
+     :relationships (->> c4-relationships
+                         (map #(parse-relationship % edge-labels))
                          (remove nil?)
-                         (vec))}))
+                         vec)}))
 
 ;; --- New functionality for implicit relationships ---
 
 (defn- rect-contains?
   "Checks if outer-rect fully contains inner-rect."
   [outer-rect inner-rect]
-  (and outer-rect inner-rect
-       (>= (:x inner-rect) (:x outer-rect))
-       (>= (:y inner-rect) (:y outer-rect))
-       (<= (+ (:x inner-rect) (:width inner-rect))
-           (+ (:x outer-rect) (:width outer-rect)))
-       (<= (+ (:y inner-rect) (:height inner-rect))
-           (+ (:y outer-rect) (:height outer-rect)))))
+  (when (and outer-rect inner-rect)
+    (let [{outer-x :x outer-y :y outer-w :width outer-h :height} outer-rect
+          {inner-x :x inner-y :y inner-w :width inner-h :height} inner-rect]
+      (and (>= inner-x outer-x)
+           (>= inner-y outer-y)
+           (<= (+ inner-x inner-w) (+ outer-x outer-w))
+           (<= (+ inner-y inner-h) (+ outer-y outer-h))))))
 
 (defn enrich-with-containment
   "Analyzes geometry to find which elements are contained within boundaries."
   [diagram-data]
-  (let [elements (:elements diagram-data)
-        boundaries (filter #(and (:geometry %)
-                                 (or (= "SystemScopeBoundary" (:type %))
-                                     (= "ContainerScopeBoundary" (:type %))))
-                           elements)]
-    (let [enriched-elements
-          (map (fn [element]
-                 (if-let [parent-boundary (first (filter #(rect-contains? (:geometry %) (:geometry element))
-                                                         (remove #(= element %) boundaries)))]
-                   (assoc element :parent-id (:id parent-boundary))
-                   element))
-               elements)]
-      (assoc diagram-data :elements enriched-elements))))
+  (let [{:keys [elements]} diagram-data
+        boundaries (filter (fn [elem] 
+                             (and (:geometry elem) 
+                                  (#{"SystemScopeBoundary" "ContainerScopeBoundary"} (:type elem))))
+                           elements)
+        enriched-elements
+        (map (fn [element]
+               (if-let [parent-boundary 
+                        (->> boundaries
+                             (remove #(= element %))
+                             (filter #(rect-contains? (:geometry %) (:geometry element)))
+                             first)]
+                 (assoc element :parent-id (:id parent-boundary))
+                 element))
+             elements)]
+    (assoc diagram-data :elements enriched-elements)))
