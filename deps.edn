@@ -5,7 +5,11 @@
         ;; Web
         http-kit/http-kit    {:mvn/version "2.8.0"}
         metosin/reitit       {:mvn/version "0.7.1"}
-        cheshire/cheshire    {:mvn/version "5.13.0"}}
+        cheshire/cheshire    {:mvn/version "5.13.0"}
+        ;; HTTP Client
+        clj-http/clj-http    {:mvn/version "3.13.1"}
+        ;; ClojureScript
+        org.clojure/clojurescript {:mvn/version "1.12.42"}}
 
  :aliases
  {:test {:extra-paths ["test"]
