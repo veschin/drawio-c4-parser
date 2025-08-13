@@ -1,165 +1,87 @@
 (ns drawio-parser.render
-  (:require [clj-chrome-devtools.core :as chrome]
-            [clj-chrome-devtools.commands.page :as page]
-            [clj-chrome-devtools.commands.runtime :as runtime]
+  (:require [clj-http.client :as http]
+            [cheshire.core :as json]
             [clojure.string :as str]))
 
-(def ^:private chrome-config
-  {:host "localhost"
-   :port 9222
-   :timeout 30000})
+(def ^:private renderer-config
+  {:base-url (or (System/getenv "RENDERER_URL") "http://localhost:5000")
+   :timeout 30000
+   :convert-endpoint "/convert_file"})
 
-(defn- start-chrome-if-needed
-  "Start headless Chrome if not already running"
-  []
+(defn- build-convert-url
+  "Build the convert_file endpoint URL with query parameters"
+  [options]
+  (let [base (str (:base-url renderer-config) (:convert-endpoint renderer-config))
+        params (remove nil? [(when (:quality options) (str "quality=" (:quality options)))
+                             (when (:transparent options) "transparent=true")
+                             (when (:border options) (str "border=" (:border options)))
+                             (when (:scale options) (str "scale=" (:scale options)))
+                             (when (:width options) (str "width=" (:width options)))
+                             (when (:height options) (str "height=" (:height options)))
+                             (when (:crop options) "crop=true")])]
+    (if (empty? params)
+      base
+      (str base "?" (str/join "&" params)))))
+
+(defn- make-convert-request
+  "Make HTTP request to the renderer service"
+  [xml-data accept-header options]
   (try
-    (chrome/connect (:host chrome-config) (:port chrome-config))
-    (catch Exception _
-      ;; Chrome not running, attempt to start it
-      (let [pb (ProcessBuilder. ["google-chrome"
-                                 "--headless" 
-                                 "--no-sandbox"
-                                 "--disable-gpu"
-                                 "--disable-dev-shm-usage"
-                                 (str "--remote-debugging-port=" (:port chrome-config))])]
-        (.start pb)
-        ;; Wait a moment for Chrome to start
-        (Thread/sleep 2000)
-        (chrome/connect (:host chrome-config) (:port chrome-config))))))
+    (http/post (build-convert-url options)
+               {:body xml-data
+                :headers {"Accept" accept-header
+                          "Content-Type" "application/xml"}
+                :timeout (:timeout renderer-config)
+                :as :byte-array})
+    (catch Exception e
+      (throw (ex-info "Failed to communicate with renderer service" 
+                      {:error (.getMessage e)} e)))))
 
-(defn- escape-js-string
-  "Escape string for JavaScript injection"
-  [s]
-  (-> s
-      (str/replace "\\" "\\\\")
-      (str/replace "\"" "\\\"")
-      (str/replace "\n" "\\n")
-      (str/replace "\r" "\\r")))
-
-(defn- wait-for-condition
-  "Wait for JavaScript condition to be true"
-  [connection condition-js timeout-ms]
-  (let [start-time (System/currentTimeMillis)
-        check-interval 500]
-    (loop []
-      (let [result (runtime/evaluate connection {:expression condition-js})
-            elapsed (- (System/currentTimeMillis) start-time)]
-        (cond
-          (get-in result [:result :value]) :success
-          (> elapsed timeout-ms) :timeout
-          :else (do (Thread/sleep check-interval) (recur)))))))
 
 (defn render-diagram-to-png
-  "Convert Draw.io XML to PNG using headless Chrome automation"
+  "Convert Draw.io XML to PNG using Docker renderer service"
   [xml-data options]
-  (let [connection (start-chrome-if-needed)
-        {:keys [width height theme] 
-         :or {width 800 height 600 theme "white"}} options]
-    (try
-      ;; Navigate to Draw.io embed interface
-      (page/navigate connection {:url "https://embed.diagrams.net"})
-      
-      ;; Wait for page load - use simple sleep as load-event-fired doesn't exist
-      (Thread/sleep 3000)
-      
-      ;; Wait for Draw.io to be ready
-      (wait-for-condition connection 
-                          "typeof EditorUi !== 'undefined'" 
-                          10000)
-      
-      ;; Load the XML data
-      (let [escaped-xml (escape-js-string xml-data)
-            load-script (str "
-              try {
-                var ui = EditorUi.prototype;
-                window.postMessage({
-                  event: 'configure',
-                  config: {theme: '" theme "'}
-                }, '*');
-                
-                window.postMessage({
-                  event: 'load',
-                  xml: '" escaped-xml "'
-                }, '*');
-                
-                window.diagramLoaded = true;
-              } catch(e) {
-                console.error('Load error:', e);
-                window.diagramLoadError = e.message;
-              }")]
-        (runtime/evaluate connection {:expression load-script}))
-      
-      ;; Wait for diagram to load
-      (wait-for-condition connection
-                          "window.diagramLoaded === true || window.diagramLoadError"
-                          5000)
-      
-      ;; Check for load errors
-      (let [error-check (runtime/evaluate connection 
-                                          {:expression "window.diagramLoadError"})]
-        (when (get-in error-check [:result :value])
-          (throw (ex-info "Failed to load diagram in Draw.io" 
-                         {:error (get-in error-check [:result :value])}))))
-      
-      ;; Export as PNG
-      (let [export-script (str "
-              try {
-                window.postMessage({
-                  event: 'export',
-                  format: 'png',
-                  w: " width ",
-                  h: " height ",
-                  bg: '" (if (= theme "dark") "#2a2a2a" "#ffffff") "'
-                }, '*');
-                window.exportRequested = true;
-              } catch(e) {
-                window.exportError = e.message;
-              }")]
-        (runtime/evaluate connection {:expression export-script}))
-      
-      ;; Wait for export completion and get result
-      (wait-for-condition connection
-                          "window.exportResult || window.exportError"
-                          10000)
-      
-      (let [result (runtime/evaluate connection 
-                                     {:expression "window.exportResult"})
-            error (runtime/evaluate connection 
-                                   {:expression "window.exportError"})]
-        (cond
-          (get-in error [:result :value])
-          (throw (ex-info "Export failed" 
-                         {:error (get-in error [:result :value])}))
-          
-          (get-in result [:result :value])
-          {:format "png"
-           :data (get-in result [:result :value])
-           :width width
-           :height height}
-          
-          :else
-          (throw (ex-info "Export timeout or unknown error" {}))))
-      
-      (catch Exception e
-        (throw (ex-info "Rendering failed" 
-                       {:error (.getMessage e)} e))))))
+  (let [response (make-convert-request xml-data "image/png" options)]
+    (if (= 200 (:status response))
+      {:format "png"
+       :data (:body response)
+       :size (count (:body response))}
+      (throw (ex-info "PNG rendering failed"
+                      {:status (:status response)
+                       :message "Renderer service returned error"})))))
 
 (defn render-diagram-to-svg
-  "Convert Draw.io XML to SVG using headless Chrome automation"
+  "Convert Draw.io XML to SVG using Docker renderer service"
   [xml-data options]
-  ;; Similar implementation but with format: 'svg'
-  (let [png-result (render-diagram-to-png xml-data 
-                                          (assoc options :format "svg"))]
-    (assoc png-result :format "svg")))
+  (let [response (make-convert-request xml-data "image/svg+xml; charset=utf-8" options)]
+    (if (= 200 (:status response))
+      {:format "svg"
+       :data (String. (:body response) "UTF-8")
+       :size (count (:body response))}
+      (throw (ex-info "SVG rendering failed"
+                      {:status (:status response)
+                       :message "Renderer service returned error"})))))
 
 (defn health-check
-  "Check if headless Chrome is available"
+  "Check if renderer service is available"
   []
   (try
-    (chrome/connect (:host chrome-config) (:port chrome-config))
-    {:status :ok :chrome-version "headless"}
+    (let [response (http/get (str (:base-url renderer-config) "/docs")
+                             {:timeout 5000
+                              :throw-exceptions false})]
+      (if (= 200 (:status response))
+        {:status :ok
+         :message "Renderer service is available"
+         :url (:base-url renderer-config)}
+        {:status :error
+         :message "Renderer service is not responding"
+         :url (:base-url renderer-config)
+         :http-status (:status response)}))
     (catch Exception e
-      {:status :error :message (.getMessage e)})))
+      {:status :error
+       :message "Cannot connect to renderer service"
+       :url (:base-url renderer-config)
+       :error (.getMessage e)})))
 
 (comment
   ;; Usage examples:
@@ -167,4 +89,8 @@
   
   (render-diagram-to-png 
     "<mxfile><diagram>...</diagram></mxfile>"
-    {:width 1024 :height 768 :theme "white"}))
+    {:width 1024 :height 768 :scale 1.0 :transparent true})
+    
+  (render-diagram-to-svg
+    "<mxfile><diagram>...</diagram></mxfile>"
+    {:border 10 :crop true}))
