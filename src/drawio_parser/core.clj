@@ -1,6 +1,7 @@
 (ns drawio-parser.core
   (:require [clojure.data.xml :as xml]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.string])
   (:import [java.net URLDecoder]))
 
 (defn decode-and-read
@@ -20,10 +21,10 @@
     (let [{:keys [x y width height]} (:attrs geometry-node)]
       ;; Convert geometry values to numbers for easier calculations
       (try
-        {:x (Integer/parseInt x)
-         :y (Integer/parseInt y)
-         :width (Integer/parseInt width)
-         :height (Integer/parseInt height)}
+        {:x (int (Double/parseDouble x))
+         :y (int (Double/parseDouble y))
+         :width (int (Double/parseDouble width))
+         :height (int (Double/parseDouble height))}
         (catch Exception _ nil)))))
 
 (defn- parse-element [element-xml]
@@ -42,13 +43,66 @@
   (let [{:keys [id c4Description label]} (:attrs rel-object-xml)
         edge-cell (first (filter (complement string?) (:content rel-object-xml)))
         {:keys [source target]} (:attrs edge-cell)]
-    (when (and source target)
+    (if (and source target)
+      ;; Direct source/target relationship
       {:id          id
        :source      source
        :target      target
        :description c4Description
        :label       label
-       :technology  (:value (edge-labels id))})))
+       :technology  (:value (edge-labels id))
+       :type        "c4"}
+      ;; Try coordinate-based relationship
+      (when-let [geometry-node (first (find-nodes edge-cell #(= :mxGeometry (:tag %))))]
+        (let [source-point (first (filter #(= "sourcePoint" (:as (:attrs %))) 
+                                         (find-nodes geometry-node #(= :mxPoint (:tag %)))))
+              target-point (first (filter #(= "targetPoint" (:as (:attrs %))) 
+                                         (find-nodes geometry-node #(= :mxPoint (:tag %)))))]
+          ;; Always create relationship record, even if no coordinates
+          {:id            id
+           :source-coords (when source-point 
+                           {:x (int (Double/parseDouble (:x (:attrs source-point))))
+                            :y (int (Double/parseDouble (:y (:attrs source-point))))})
+           :target-coords (when target-point 
+                           {:x (int (Double/parseDouble (:x (:attrs target-point))))
+                            :y (int (Double/parseDouble (:y (:attrs target-point))))})
+           :description   c4Description
+           :label         label
+           :technology    (:value (edge-labels id))
+           :type          "c4"
+           :coordinate-based? true})))))
+
+(defn- parse-edge-cell [edge-cell edge-labels]
+  "Parse standalone mxCell edge relationships"
+  (let [{:keys [id source target]} (:attrs edge-cell)]
+    (if (and source target)
+      ;; Direct source/target relationship
+      {:id          id
+       :source      source
+       :target      target
+       :description nil
+       :label       nil
+       :technology  (:value (edge-labels id))
+       :type        "edge"}
+      ;; Try coordinate-based relationship
+      (when-let [geometry-node (first (find-nodes edge-cell #(= :mxGeometry (:tag %))))]
+        (let [source-point (first (filter #(= "sourcePoint" (:as (:attrs %))) 
+                                         (find-nodes geometry-node #(= :mxPoint (:tag %)))))
+              target-point (first (filter #(= "targetPoint" (:as (:attrs %))) 
+                                         (find-nodes geometry-node #(= :mxPoint (:tag %)))))]
+          ;; Always create relationship record, even if no coordinates
+          {:id            id
+           :source-coords (when source-point 
+                           {:x (int (Double/parseDouble (:x (:attrs source-point))))
+                            :y (int (Double/parseDouble (:y (:attrs source-point))))})
+           :target-coords (when target-point 
+                           {:x (int (Double/parseDouble (:x (:attrs target-point))))
+                            :y (int (Double/parseDouble (:y (:attrs target-point))))})
+           :description   nil
+           :label         nil
+           :technology    (:value (edge-labels id))
+           :type          "edge"
+           :coordinate-based? true})))))
 
 (defn parse-diagram [xml-stream]
   (let [parsed-xml (xml/parse xml-stream {:skip-whitespace true})
@@ -61,13 +115,26 @@
                          (reduce (fn [acc {:keys [parent value]}]
                                    (assoc acc parent {:value value}))
                                  {}))
-        {c4-relationships true c4-elements false}
-        (group-by #(= "Relationship" (:c4Type (:attrs %))) all-objects)]
-    {:elements      (map parse-element c4-elements)
-     :relationships (->> c4-relationships
-                         (map #(parse-relationship % edge-labels))
-                         (remove nil?)
-                         vec)}))
+        grouped-objects (group-by #(= "Relationship" (:c4Type (:attrs %))) all-objects)
+        c4-relationships (get grouped-objects true [])
+        c4-elements (get grouped-objects false [])
+        ;; Find standalone edge mxCells (exclude those inside C4 objects)
+        standalone-edges (filter #(and (= "1" (:edge (:attrs %)))
+                                       (:id (:attrs %))  ; has ID
+                                       (not (some (fn [obj] 
+                                                   (some #{%} (tree-seq :content :content obj)))
+                                                 c4-relationships)))
+                                all-mxcells)
+        elements (map parse-element c4-elements)
+        c4-rels (->> c4-relationships
+                    (map #(parse-relationship % edge-labels))
+                    (remove nil?))
+        edge-rels (->> standalone-edges
+                      (map #(parse-edge-cell % edge-labels))
+                      (remove nil?))
+        all-relationships (concat c4-rels edge-rels)]
+    {:elements      elements
+     :relationships (vec all-relationships)}))
 
 ;; --- New functionality for implicit relationships ---
 

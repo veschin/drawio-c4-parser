@@ -1,0 +1,37 @@
+/* Blue Serenity - https://coolors.co/edf2fb-e2eafc-d7e3fc-ccdbfd-c1d3fe-b6ccfe-abc4ff */
+
+- Tailwind
+
+{ 'alice_blue': { DEFAULT: '#edf2fb', 100: '#122850', 200: '#234fa1', 300: '#4e7ed8', 400: '#9eb8ea', 500: '#edf2fb', 600: '#f2f5fc', 700: '#f5f8fd', 800: '#f8fafe', 900: '#fcfdfe' }, 'lavender_(web)': { DEFAULT: '#e2eafc', 100: '#092057', 200: '#1241ae', 300: '#366cea', 400: '#8dabf3', 500: '#e2eafc', 600: '#e9effd', 700: '#eef3fd', 800: '#f4f7fe', 900: '#f9fbfe' }, 'lavender_(web)': { DEFAULT: '#d7e3fc', 100: '#072057', 200: '#0d40af', 300: '#2b69ef', 400: '#82a6f6', 500: '#d7e3fc', 600: '#e1eafd', 700: '#e8effd', 800: '#f0f4fe', 900: '#f7fafe' }, 'periwinkle': { DEFAULT: '#ccdbfd', 100: '#041d58', 200: '#073ab0', 300: '#1e5ff6', 400: '#769df9', 500: '#ccdbfd', 600: '#d8e3fd', 700: '#e2eafe', 800: '#ebf1fe', 900: '#f5f8ff' }, 'periwinkle': { DEFAULT: '#c1d3fe', 100: '#011b58', 200: '#0337b1', 300: '#1258fb', 400: '#6a96fd', 500: '#c1d3fe', 600: '#cfddfe', 700: '#dbe6fe', 800: '#e7eeff', 900: '#f3f7ff' }, 'periwinkle': { DEFAULT: '#b6ccfe', 100: '#011b55', 200: '#0335ab', 300: '#0952fb', 400: '#5e8efd', 500: '#b6ccfe', 600: '#c3d5fe', 700: '#d2dffe', 800: '#e1eaff', 900: '#f0f4ff' }, 'jordy_blue': { DEFAULT: '#abc4ff', 100: '#001a56', 200: '#0033ab', 300: '#024eff', 400: '#588aff', 500: '#abc4ff', 600: '#bed1ff', 700: '#ceddff', 800: '#dee8ff', 900: '#eff4ff' } }
+
+- CSV
+
+edf2fb,e2eafc,d7e3fc,ccdbfd,c1d3fe,b6ccfe,abc4ff
+
+- With #
+
+#edf2fb, #e2eafc, #d7e3fc, #ccdbfd, #c1d3fe, #b6ccfe, #abc4ff
+
+- Array
+
+["edf2fb","e2eafc","d7e3fc","ccdbfd","c1d3fe","b6ccfe","abc4ff"]
+
+- Object
+
+{"Alice Blue":"edf2fb","Lavender (web)":"e2eafc","Lavender (web) 2":"d7e3fc","Periwinkle":"ccdbfd","Periwinkle 2":"c1d3fe","Periwinkle 3":"b6ccfe","Jordy Blue":"abc4ff"}
+
+- Extended Array
+
+[{"name":"Alice Blue","hex":"edf2fb","rgb":[237,242,251],"cmyk":[6,4,0,2],"hsb":[219,6,98],"hsl":[219,64,96],"lab":[95,0,-5]},{"name":"Lavender (web)","hex":"e2eafc","rgb":[226,234,252],"cmyk":[10,7,0,1],"hsb":[222,10,99],"hsl":[222,81,94],"lab":[93,1,-10]},{"name":"Lavender (web)","hex":"d7e3fc","rgb":[215,227,252],"cmyk":[15,10,0,1],"hsb":[221,15,99],"hsl":[221,86,92],"lab":[90,1,-13]},{"name":"Periwinkle","hex":"ccdbfd","rgb":[204,219,253],"cmyk":[19,13,0,1],"hsb":[222,19,99],"hsl":[222,92,90],"lab":[87,2,-18]},{"name":"Periwinkle","hex":"c1d3fe","rgb":[193,211,254],"cmyk":[24,17,0,0],"hsb":[222,24,100],"hsl":[222,97,88],"lab":[85,3,-23]},{"name":"Periwinkle","hex":"b6ccfe","rgb":[182,204,254],"cmyk":[28,20,0,0],"hsb":[222,28,100],"hsl":[222,97,85],"lab":[82,4,-27]},{"name":"Jordy Blue","hex":"abc4ff","rgb":[171,196,255],"cmyk":[33,23,0,0],"hsb":[222,33,100],"hsl":[222,100,84],"lab":[79,5,-32]}]
+
+- XML
+
+<palette>
+  <color name="Alice Blue" hex="edf2fb" r="237" g="242" b="251" />
+  <color name="Lavender (web)" hex="e2eafc" r="226" g="234" b="252" />
+  <color name="Lavender (web)" hex="d7e3fc" r="215" g="227" b="252" />
+  <color name="Periwinkle" hex="ccdbfd" r="204" g="219" b="253" />
+  <color name="Periwinkle" hex="c1d3fe" r="193" g="211" b="254" />
+  <color name="Periwinkle" hex="b6ccfe" r="182" g="204" b="254" />
+  <color name="Jordy Blue" hex="abc4ff" r="171" g="196" b="255" />
+</palette>

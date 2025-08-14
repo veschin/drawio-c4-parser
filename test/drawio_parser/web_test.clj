@@ -19,7 +19,7 @@
         (is (= 200 (:status response)))
         (let [body (json/parse-string (:body response) true)]
           (is (= 15 (count (:elements body))))
-          (is (= 1 (count (:relationships body)))))))
+          (is (= 2 (count (:relationships body)))))))
 
     (testing "POST /api/v1/parse/paste"
       (let [paste-data (slurp-resource "drawio-paste.xml")

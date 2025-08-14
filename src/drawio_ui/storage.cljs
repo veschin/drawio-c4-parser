@@ -129,7 +129,9 @@
 
 (defn get-storage-stats []
   (let [total-size (->> (.keys js/Object js/localStorage)
-                       (map #(.length (.getItem js/localStorage %)))
+                       (map (fn [key]
+                              (let [item (.getItem js/localStorage key)]
+                                (if item (.-length item) 0))))
                        (reduce +))
         diagram-count (count (get-diagrams))
         version-count (->> (get-diagrams)

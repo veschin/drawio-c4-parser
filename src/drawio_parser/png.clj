@@ -1,8 +1,11 @@
 (ns drawio-parser.png
-  (:require [clojure.java.io :as io])
-  (:import [java.io ByteArrayInputStream DataInputStream]
+  (:require [clojure.java.io :as io]
+            [clojure.data.xml :as xml]
+            [clojure.string :as str])
+  (:import [java.io ByteArrayInputStream DataInputStream ByteArrayOutputStream]
            [java.util.zip Inflater]
-           [java.util Base64]))
+           [java.util Base64]
+           [java.net URLDecoder]))
 
 (defn- read-be-int32
   "Read big-endian 32-bit integer from DataInputStream"
@@ -65,8 +68,68 @@
       (throw (ex-info "Failed to parse zTXt chunk" 
                       {:error (.getMessage e)} e)))))
 
+(defn- parse-text-chunk
+  "Parse tEXt chunk to extract keyword and text"
+  [data]
+  (try
+    (let [null-pos (loop [i 0]
+                     (if (or (>= i (count data)) (zero? (aget data i)))
+                       i
+                       (recur (inc i))))
+          keyword (String. (byte-array (take null-pos data)) "ISO-8859-1")
+          text (String. (byte-array (drop (inc null-pos) data)) "ISO-8859-1")]
+      {:keyword keyword
+       :text text})
+    (catch Exception e
+      (throw (ex-info "Failed to parse tEXt chunk" 
+                      {:error (.getMessage e)} e)))))
+
+(defn- decode-compressed-diagram
+  "Decode compressed diagram content from Draw.io: base64 -> raw deflate -> URL decode"
+  [encoded-content]
+  (when (and encoded-content (not (str/blank? encoded-content)))
+    (try
+      (let [decoded-bytes (.decode (Base64/getDecoder) (.getBytes encoded-content))
+            inflater (Inflater. true) ; nowrap=true for raw deflate
+            output-stream (ByteArrayOutputStream.)]
+        (.setInput inflater decoded-bytes)
+        (let [buffer (byte-array 1024)]
+          (loop []
+            (let [count (.inflate inflater buffer)]
+              (when (> count 0)
+                (.write output-stream buffer 0 count)
+                (recur)))))
+        (.end inflater)
+        (let [inflated-result (String. (.toByteArray output-stream) "UTF-8")]
+          (URLDecoder/decode inflated-result "UTF-8")))
+      (catch Exception _
+        nil))))
+
+(defn- expand-compressed-diagrams
+  "Expand compressed diagram content within mxfile XML"
+  [xml-string]
+  (try
+    (let [parsed-xml (xml/parse (java.io.StringReader. xml-string))
+          diagram-nodes (filter #(= :diagram (:tag %)) 
+                               (tree-seq :content :content parsed-xml))]
+      (if (empty? diagram-nodes)
+        xml-string ; No diagram nodes, return original
+        ;; Process each diagram node
+        (reduce (fn [xml-str diagram-node]
+                 (let [encoded-content (first (:content diagram-node))]
+                   (if (string? encoded-content)
+                     (if-let [decoded-content (decode-compressed-diagram encoded-content)]
+                       ;; Replace the encoded content with decoded content in XML string
+                       (str/replace xml-str encoded-content decoded-content)
+                       xml-str)
+                     xml-str)))
+               xml-string
+               diagram-nodes)))
+    (catch Exception _
+      xml-string))) ; If expansion fails, return original
+
 (defn extract-drawio-xml
-  "Extract Draw.io XML from PNG zTXt chunks"
+  "Extract Draw.io XML from PNG tEXt or zTXt chunks"
   [png-bytes]
   (try
     (let [bis (ByteArrayInputStream. png-bytes)
@@ -74,10 +137,20 @@
       ;; Skip PNG signature (8 bytes)
       (.skip dis 8)
       
-      ;; Find zTXt chunks with 'mxGraphModel' keyword
+      ;; Find tEXt/zTXt chunks with Draw.io data
       (loop []
         (when-let [chunk (read-chunk dis)]
           (cond
+            (= "tEXt" (:type chunk))
+            (let [parsed (try
+                          (parse-text-chunk (:data chunk))
+                          (catch Exception _ nil))]
+              (if (and parsed (= "mxfile" (:keyword parsed)))
+                ;; Found Draw.io data - URL decode and expand compressed diagrams
+                (let [xml-data (URLDecoder/decode (:text parsed) "UTF-8")]
+                  (expand-compressed-diagrams xml-data))
+                (recur)))
+            
             (= "zTXt" (:type chunk))
             (let [parsed (try
                           (parse-ztxt-chunk (:data chunk))
@@ -88,7 +161,7 @@
                       xml-bytes (.decode (Base64/getDecoder) base64-xml)
                       xml-str (String. xml-bytes "UTF-8")]
                   xml-str)
-                (recur))) ; Continue looking for mxGraphModel chunk or skip malformed
+                (recur))) ; Continue looking or skip malformed
             
             (= "IEND" (:type chunk))
             nil ; End of file, no Draw.io data found

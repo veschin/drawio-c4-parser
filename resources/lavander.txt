@@ -1,0 +1,35 @@
+/* Soft Lavender - https://coolors.co/9381ff-b8b8ff-f8f7ff-ffeedd-ffd8be */
+
+- Tailwind
+
+{ 'tropical_indigo': { DEFAULT: '#9381ff', 100: '#0b004d', 200: '#170099', 300: '#2200e6', 400: '#5233ff', 500: '#9381ff', 600: '#a899ff', 700: '#beb3ff', 800: '#d4ccff', 900: '#e9e5ff' }, 'periwinkle': { DEFAULT: '#b8b8ff', 100: '#000058', 200: '#0000af', 300: '#0808ff', 400: '#6060ff', 500: '#b8b8ff', 600: '#c6c6ff', 700: '#d4d4ff', 800: '#e2e2ff', 900: '#f1f1ff' }, 'ghost_white': { DEFAULT: '#f8f7ff', 100: '#0d0064', 200: '#1b00c8', 300: '#492dff', 400: '#a091ff', 500: '#f8f7ff', 600: '#f8f7ff', 700: '#faf9ff', 800: '#fbfbff', 900: '#fdfdff' }, 'antique_white': { DEFAULT: '#ffeedd', 100: '#5f2f00', 200: '#be5f00', 300: '#ff8e1e', 400: '#ffbe7c', 500: '#ffeedd', 600: '#fff1e2', 700: '#fff4ea', 800: '#fff8f1', 900: '#fffbf8' }, 'apricot': { DEFAULT: '#ffd8be', 100: '#592300', 200: '#b14700', 300: '#ff6d0b', 400: '#ffa264', 500: '#ffd8be', 600: '#ffdfca', 700: '#ffe7d7', 800: '#ffefe4', 900: '#fff7f2' } }
+
+- CSV
+
+9381ff,b8b8ff,f8f7ff,ffeedd,ffd8be
+
+- With #
+
+#9381ff, #b8b8ff, #f8f7ff, #ffeedd, #ffd8be
+
+- Array
+
+["9381ff","b8b8ff","f8f7ff","ffeedd","ffd8be"]
+
+- Object
+
+{"Tropical indigo":"9381ff","Periwinkle":"b8b8ff","Ghost white":"f8f7ff","Antique white":"ffeedd","Apricot":"ffd8be"}
+
+- Extended Array
+
+[{"name":"Tropical indigo","hex":"9381ff","rgb":[147,129,255],"cmyk":[42,49,0,0],"hsb":[249,49,100],"hsl":[249,100,75],"lab":[61,37,-61]},{"name":"Periwinkle","hex":"b8b8ff","rgb":[184,184,255],"cmyk":[28,28,0,0],"hsb":[240,28,100],"hsl":[240,100,86],"lab":[77,15,-35]},{"name":"Ghost white","hex":"f8f7ff","rgb":[248,247,255],"cmyk":[3,3,0,0],"hsb":[248,3,100],"hsl":[248,100,98],"lab":[98,2,-4]},{"name":"Antique white","hex":"ffeedd","rgb":[255,238,221],"cmyk":[0,7,13,0],"hsb":[30,13,100],"hsl":[30,100,93],"lab":[95,3,10]},{"name":"Apricot","hex":"ffd8be","rgb":[255,216,190],"cmyk":[0,15,25,0],"hsb":[24,25,100],"hsl":[24,100,87],"lab":[89,10,18]}]
+
+- XML
+
+<palette>
+  <color name="Tropical indigo" hex="9381ff" r="147" g="129" b="255" />
+  <color name="Periwinkle" hex="b8b8ff" r="184" g="184" b="255" />
+  <color name="Ghost white" hex="f8f7ff" r="248" g="247" b="255" />
+  <color name="Antique white" hex="ffeedd" r="255" g="238" b="221" />
+  <color name="Apricot" hex="ffd8be" r="255" g="216" b="190" />
+</palette>

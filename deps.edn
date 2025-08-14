@@ -8,6 +8,8 @@
         cheshire/cheshire    {:mvn/version "5.13.0"}
         ;; HTTP Client
         clj-http/clj-http    {:mvn/version "3.13.1"}
+        ;; Ring core (includes multipart handling)
+        ring/ring-core {:mvn/version "1.12.2"}
         ;; ClojureScript
         org.clojure/clojurescript {:mvn/version "1.12.42"}}
 

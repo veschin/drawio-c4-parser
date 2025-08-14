@@ -1,0 +1,43 @@
+# Git files
+.git
+.gitignore
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+*.md
+docs/
+
+# Development files
+.env
+.repl-*
+.shadow-cljs/
+.clj-kondo/
+.lsp/
+.cpcache/
+
+# Node modules (will be installed in container)
+node_modules/
+
+# Target and build artifacts
+target/
+resources/public/js/cljs-runtime/
+.shadow-cljs/
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test/
+*_test.clj
+*_test.cljs

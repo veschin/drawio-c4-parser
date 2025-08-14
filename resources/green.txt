@@ -1,0 +1,36 @@
+/* Earthy Green Tones - https://coolors.co/e9f5db-cfe1b9-b5c99a-97a97c-87986a-718355 */
+
+- Tailwind
+
+{ 'nyanza': { DEFAULT: '#e9f5db', 100: '#304914', 200: '#609228', 300: '#90cd49', 400: '#bce192', 500: '#e9f5db', 600: '#edf7e2', 700: '#f2f9e9', 800: '#f6fbf1', 900: '#fbfdf8' }, 'tea_green': { DEFAULT: '#cfe1b9', 100: '#2a3918', 200: '#557231', 300: '#7fab49', 400: '#a7c87e', 500: '#cfe1b9', 600: '#d8e7c6', 700: '#e2edd4', 800: '#ebf3e2', 900: '#f5f9f1' }, 'olivine': { DEFAULT: '#b5c99a', 100: '#252e19', 200: '#4a5d32', 300: '#6f8b4b', 400: '#93b06d', 500: '#b5c99a', 600: '#c4d4af', 700: '#d3dfc3', 800: '#e2ead7', 900: '#f0f4eb' }, 'olivine': { DEFAULT: '#97a97c', 100: '#1e2317', 200: '#3d462e', 300: '#5b6a45', 400: '#798d5c', 500: '#97a97c', 600: '#abba95', 700: '#c0cbaf', 800: '#d5dcca', 900: '#eaeee4' }, 'moss_green': { DEFAULT: '#87986a', 100: '#1b1f15', 200: '#373d2b', 300: '#525c40', 400: '#6d7b55', 500: '#87986a', 600: '#a0ad89', 700: '#b8c2a7', 800: '#cfd6c4', 900: '#e7ebe2' }, 'reseda_green': { DEFAULT: '#718355', 100: '#161a11', 200: '#2d3422', 300: '#434e33', 400: '#5a6844', 500: '#718355', 600: '#8ea270', 700: '#abb994', 800: '#c7d0b7', 900: '#e3e8db' } }
+
+- CSV
+
+e9f5db,cfe1b9,b5c99a,97a97c,87986a,718355
+
+- With #
+
+#e9f5db, #cfe1b9, #b5c99a, #97a97c, #87986a, #718355
+
+- Array
+
+["e9f5db","cfe1b9","b5c99a","97a97c","87986a","718355"]
+
+- Object
+
+{"Nyanza":"e9f5db","Tea green":"cfe1b9","Olivine":"b5c99a","Olivine 2":"97a97c","Moss green":"87986a","Reseda green":"718355"}
+
+- Extended Array
+
+[{"name":"Nyanza","hex":"e9f5db","rgb":[233,245,219],"cmyk":[5,0,11,4],"hsb":[88,11,96],"hsl":[88,57,91],"lab":[95,-8,11]},{"name":"Tea green","hex":"cfe1b9","rgb":[207,225,185],"cmyk":[8,0,18,12],"hsb":[87,18,88],"hsl":[87,40,80],"lab":[87,-13,18]},{"name":"Olivine","hex":"b5c99a","rgb":[181,201,154],"cmyk":[10,0,23,21],"hsb":[86,23,79],"hsl":[86,30,70],"lab":[78,-15,21]},{"name":"Olivine","hex":"97a97c","rgb":[151,169,124],"cmyk":[11,0,27,34],"hsb":[84,27,66],"hsl":[84,21,57],"lab":[67,-14,21]},{"name":"Moss green","hex":"87986a","rgb":[135,152,106],"cmyk":[11,0,30,40],"hsb":[82,30,60],"hsl":[82,18,51],"lab":[60,-14,22]},{"name":"Reseda green","hex":"718355","rgb":[113,131,85],"cmyk":[14,0,35,49],"hsb":[83,35,51],"hsl":[83,21,42],"lab":[52,-15,23]}]
+
+- XML
+
+<palette>
+  <color name="Nyanza" hex="e9f5db" r="233" g="245" b="219" />
+  <color name="Tea green" hex="cfe1b9" r="207" g="225" b="185" />
+  <color name="Olivine" hex="b5c99a" r="181" g="201" b="154" />
+  <color name="Olivine" hex="97a97c" r="151" g="169" b="124" />
+  <color name="Moss green" hex="87986a" r="135" g="152" b="106" />
+  <color name="Reseda green" hex="718355" r="113" g="131" b="85" />
+</palette>

@@ -13,7 +13,7 @@
 
         (testing "Overall structure"
           (is (= 15 (count elements)) "Should parse all 15 C4 elements")
-          (is (= 1 (count relationships)) "Should parse only the 1 valid relationship"))
+          (is (= 2 (count relationships)) "Should parse both relationships (direct and coordinate-based)"))
 
         (testing "Specific Software System element (ID 8)"
           (let [system (first (filter #(= "8" (:id %)) elements))]
@@ -55,7 +55,7 @@
           elements (:elements diagram)
           relationships (:relationships diagram)]
       (is (= 15 (count elements)) "Should parse all 15 C4 elements from pasted XML")
-      (is (= 1 (count relationships)) "Should parse the 1 valid relationship from pasted XML")
+      (is (= 2 (count relationships)) "Should parse both relationships from pasted XML")
 
       (let [system (first (filter #(= "8" (:id %)) elements))]
         (is (some? system) "System with ID 8 should exist")

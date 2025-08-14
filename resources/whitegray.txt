@@ -1,0 +1,39 @@
+/* Light Steel - https://coolors.co/f8f9fa-e9ecef-dee2e6-ced4da-adb5bd-6c757d-495057-343a40-212529 */
+
+- Tailwind
+
+{ 'seasalt': { DEFAULT: '#f8f9fa', 100: '#29323a', 200: '#536475', 300: '#8496a8', 400: '#bfc8d1', 500: '#f8f9fa', 600: '#fafbfc', 700: '#fbfcfc', 800: '#fdfdfd', 900: '#fefefe' }, 'anti-flash_white': { DEFAULT: '#e9ecef', 100: '#282f37', 200: '#505f6e', 300: '#7c8ea0', 400: '#b3bec8', 500: '#e9ecef', 600: '#eef1f3', 700: '#f3f4f6', 800: '#f7f8f9', 900: '#fbfbfc' }, 'platinum': { DEFAULT: '#dee2e6', 100: '#272d34', 200: '#4e5b67', 300: '#788899', 400: '#abb6c0', 500: '#dee2e6', 600: '#e5e9ec', 700: '#eceef1', 800: '#f2f4f5', 900: '#f9f9fa' }, 'french_gray': { DEFAULT: '#ced4da', 100: '#242a30', 200: '#495561', 300: '#6d7f91', 400: '#9da9b5', 500: '#ced4da', 600: '#d7dce1', 700: '#e1e5e9', 800: '#ebeef0', 900: '#f5f6f8' }, 'french_gray': { DEFAULT: '#adb5bd', 100: '#202428', 200: '#404850', 300: '#616d79', 400: '#85919d', 500: '#adb5bd', 600: '#bdc4ca', 700: '#ced3d8', 800: '#dee1e5', 900: '#eff0f2' }, 'slate_gray': { DEFAULT: '#6c757d', 100: '#161819', 200: '#2c2f32', 300: '#41474b', 400: '#575e64', 500: '#6c757d', 600: '#899199', 700: '#a7adb2', 800: '#c4c8cc', 900: '#e2e4e5' }, 'outer_space': { DEFAULT: '#495057', 100: '#0e1011', 200: '#1d2022', 300: '#2b2f34', 400: '#3a3f45', 500: '#495057', 600: '#68727d', 700: '#8c959f', 800: '#b2b9bf', 900: '#d9dcdf' }, 'onyx': { DEFAULT: '#343a40', 100: '#0b0c0d', 200: '#15171a', 300: '#202327', 400: '#2a2f34', 500: '#343a40', 600: '#58626c', 700: '#7d8995', 800: '#a9b0b8', 900: '#d4d8dc' }, 'eerie_black': { DEFAULT: '#212529', 100: '#070808', 200: '#0e0f11', 300: '#141719', 400: '#1b1f22', 500: '#212529', 600: '#49525b', 700: '#6f7d8b', 800: '#9fa8b2', 900: '#cfd4d8' } }
+
+- CSV
+
+f8f9fa,e9ecef,dee2e6,ced4da,adb5bd,6c757d,495057,343a40,212529
+
+- With #
+
+#f8f9fa, #e9ecef, #dee2e6, #ced4da, #adb5bd, #6c757d, #495057, #343a40, #212529
+
+- Array
+
+["f8f9fa","e9ecef","dee2e6","ced4da","adb5bd","6c757d","495057","343a40","212529"]
+
+- Object
+
+{"Seasalt":"f8f9fa","Anti-flash white":"e9ecef","Platinum":"dee2e6","French gray":"ced4da","French gray 2":"adb5bd","Slate gray":"6c757d","Outer space":"495057","Onyx":"343a40","Eerie black":"212529"}
+
+- Extended Array
+
+[{"name":"Seasalt","hex":"f8f9fa","rgb":[248,249,250],"cmyk":[1,0,0,2],"hsb":[210,1,98],"hsl":[210,17,98],"lab":[98,0,-1]},{"name":"Anti-flash white","hex":"e9ecef","rgb":[233,236,239],"cmyk":[3,1,0,6],"hsb":[210,3,94],"hsl":[210,16,93],"lab":[93,0,-2]},{"name":"Platinum","hex":"dee2e6","rgb":[222,226,230],"cmyk":[3,2,0,10],"hsb":[210,3,90],"hsl":[210,14,89],"lab":[90,-1,-2]},{"name":"French gray","hex":"ced4da","rgb":[206,212,218],"cmyk":[6,3,0,15],"hsb":[210,6,85],"hsl":[210,14,83],"lab":[85,-1,-4]},{"name":"French gray","hex":"adb5bd","rgb":[173,181,189],"cmyk":[8,4,0,26],"hsb":[210,8,74],"hsl":[210,11,71],"lab":[73,-1,-5]},{"name":"Slate gray","hex":"6c757d","rgb":[108,117,125],"cmyk":[14,6,0,51],"hsb":[208,14,49],"hsl":[208,7,46],"lab":[49,-2,-6]},{"name":"Outer space","hex":"495057","rgb":[73,80,87],"cmyk":[16,8,0,66],"hsb":[210,16,34],"hsl":[210,9,31],"lab":[34,-1,-5]},{"name":"Onyx","hex":"343a40","rgb":[52,58,64],"cmyk":[19,9,0,75],"hsb":[210,19,25],"hsl":[210,10,23],"lab":[24,-1,-5]},{"name":"Eerie black","hex":"212529","rgb":[33,37,41],"cmyk":[20,10,0,84],"hsb":[210,20,16],"hsl":[210,11,15],"lab":[14,-1,-3]}]
+
+- XML
+
+<palette>
+  <color name="Seasalt" hex="f8f9fa" r="248" g="249" b="250" />
+  <color name="Anti-flash white" hex="e9ecef" r="233" g="236" b="239" />
+  <color name="Platinum" hex="dee2e6" r="222" g="226" b="230" />
+  <color name="French gray" hex="ced4da" r="206" g="212" b="218" />
+  <color name="French gray" hex="adb5bd" r="173" g="181" b="189" />
+  <color name="Slate gray" hex="6c757d" r="108" g="117" b="125" />
+  <color name="Outer space" hex="495057" r="73" g="80" b="87" />
+  <color name="Onyx" hex="343a40" r="52" g="58" b="64" />
+  <color name="Eerie black" hex="212529" r="33" g="37" b="41" />
+</palette>

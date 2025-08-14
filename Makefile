@@ -2,7 +2,8 @@
 DP_PORT ?= 8080
 CONTAINER_NAME = drawio-parser-app
 
-.PHONY: run test uberjar docker-build docker-run docker-stop compose-up compose-down compose-test
+.PHONY: run test uberjar docker-build docker-run docker-stop compose-up compose-down compose-test \
+         frontend-deps frontend-dev frontend-build frontend-css clean-frontend
 
 run:
 	clj -M -m drawio-parser.web
@@ -74,3 +75,24 @@ compose-test:
 
 	@echo "\n--- All tests passed, stopping services ---"
 	@make compose-down
+
+# Frontend development targets
+frontend-deps:
+	@echo "Installing frontend dependencies..."
+	npm install
+
+frontend-dev:
+	@echo "Starting frontend development with hot reload..."
+	npm run dev
+
+frontend-build:
+	@echo "Building frontend for production..."
+	npm run build
+
+frontend-css:
+	@echo "Building CSS only..."
+	npm run css-build
+
+clean-frontend:
+	@echo "Cleaning frontend build artifacts..."
+	rm -rf node_modules resources/public/css/output.css resources/public/js/main.js

@@ -6,6 +6,8 @@
             [drawio-parser.core :as core]
             [drawio-parser.png :as png]
             [drawio-parser.render :as render]
+            [drawio-parser.compare :as compare]
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             )
   (:gen-class))
 
@@ -89,6 +91,33 @@
    :headers {"Content-Type" "text/html"}
    :body (slurp (io/resource "public/index.html"))})
 
+(defn- compare-handler
+  "Compare two uploaded files"
+  [request]
+  (try
+    (let [multipart-params (:multipart-params request)
+          file1 (get multipart-params "file1")
+          file2 (get multipart-params "file2")]
+      (if (and file1 file2)
+        (let [file1-bytes (cond
+                           (map? file1) (with-open [is (io/input-stream (:tempfile file1))]
+                                         (.readAllBytes is))
+                           (instance? java.io.File file1) (with-open [is (io/input-stream file1)]
+                                                            (.readAllBytes is))
+                           :else (.getBytes (str file1) "UTF-8"))
+              file2-bytes (cond
+                           (map? file2) (with-open [is (io/input-stream (:tempfile file2))]
+                                         (.readAllBytes is))
+                           (instance? java.io.File file2) (with-open [is (io/input-stream file2)]
+                                                            (.readAllBytes is))
+                           :else (.getBytes (str file2) "UTF-8"))
+              comparison (compare/compare-files file1-bytes file2-bytes)]
+          (json-response comparison))
+        (json-response 400 {:error "Both file1 and file2 parameters are required"})))
+    (catch Exception e
+      (json-response 500 {:error "Failed to compare files"
+                          :message (.getMessage e)}))))
+
 (def app
   (reitit-ring/ring-handler
    (reitit-ring/router
@@ -98,8 +127,12 @@
      ["/parse/png" {:post {:handler png-handler}}]
      ["/render/png" {:post {:handler render-png-handler}}]
      ["/render/svg" {:post {:handler render-svg-handler}}]
+     ["/compare" {:post {:handler compare-handler}}]
      ["/health" {:get {:handler health-handler}}]
-     ])))
+     ])
+   (reitit-ring/routes
+    (reitit-ring/create-default-handler))
+   {:middleware [wrap-multipart-params]}))
 
 (defn -main [& _args]
   (let [port (Integer/parseInt (or (System/getenv "DP_PORT") "8080"))]
